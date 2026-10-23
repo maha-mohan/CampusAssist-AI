@@ -1,0 +1,68 @@
+# Production-style stack:  docker compose up -d --build
+# Then:  docker compose exec api python -m app.scripts.seed --samples
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: helpdesk
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-helpdesk}
+      POSTGRES_DB: helpdesk
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U helpdesk"]
+      interval: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redisdata:/data
+
+  api:
+    build: ./backend
+    restart: unless-stopped
+    env_file: ./backend/.env
+    environment:
+      DATABASE_URL: postgresql+asyncpg://helpdesk:${POSTGRES_PASSWORD:-helpdesk}@postgres:5432/helpdesk
+      REDIS_URL: redis://redis:6379/0
+    volumes:
+      - uploads:/app/storage/uploads
+    depends_on:
+      postgres: { condition: service_healthy }
+      redis: { condition: service_started }
+    healthcheck:
+      test: ["CMD", "curl", "-fs", "http://localhost:8000/api/health"]
+      interval: 30s
+      retries: 3
+
+  worker:
+    build: ./backend
+    restart: unless-stopped
+    env_file: ./backend/.env
+    environment:
+      DATABASE_URL: postgresql+asyncpg://helpdesk:${POSTGRES_PASSWORD:-helpdesk}@postgres:5432/helpdesk
+      REDIS_URL: redis://redis:6379/0
+    command: ["arq", "app.workers.worker.WorkerSettings"]
+    volumes:
+      - uploads:/app/storage/uploads
+    depends_on:
+      - api
+
+  nginx:
+    build:
+      context: .
+      dockerfile: infra/Dockerfile.nginx
+    restart: unless-stopped
+    ports:
+      - "${HTTP_PORT:-8080}:80"
+    depends_on:
+      - api
+
+volumes:
+  pgdata:
+  redisdata:
+  uploads:

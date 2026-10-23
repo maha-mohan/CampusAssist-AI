@@ -1,0 +1,23 @@
+question,expected_contains,should_answer,category
+What is the annual fee for CSE?,"1,20,000",yes,fees
+What is the tuition fee for B.Tech AI and Data Science?,"1,25,000",yes,fees
+What is the last date for B.E. admission?,31 July 2026,yes,admission
+When do first year classes start?,18 August 2026,yes,admission
+What is the application fee for admission?,"1,000",yes,admission
+What is the minimum mark for general category eligibility?,45%,yes,admission
+What is the last date for lateral entry?,20 August 2026,yes,admission
+How much is the hostel fee for 2-sharing AC room?,"1,30,000",yes,hostel
+What is the hostel in-time on weekdays?,8:30 PM,yes,hostel
+When can I download my hall ticket?,one week before,yes,exam
+What is the revaluation fee?,500,yes,exam
+What attendance is needed for hall ticket?,75%,yes,exam
+What is the highest placement package?,24 LPA,yes,placements
+What CGPA is needed for placement registration?,6.5,yes,placements
+How many seats are there in CSE?,180,yes,courses
+Is the college affiliated to Anna University?,Anna University,yes,courses
+What merit scholarship for 95% marks?,50%,yes,scholarship
+Is there college bus facility?,25 routes,yes,transport
+What are the college office working hours?,9:00 AM,yes,office
+Who won the IPL final this year?,,no,out_of_scope
+What is the principal's mobile number?,,no,out_of_scope
+Can you write my assignment on thermodynamics?,,no,out_of_scope

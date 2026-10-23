@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ABC Engineering College (demo site)</title>
+    <style>
+      body { margin: 0; font-family: Georgia, 'Times New Roman', serif; color: #222; background: #fafafa; }
+      header { background: #fff; border-bottom: 1px solid #ddd; padding: 14px 24px; display: flex; gap: 24px; align-items: center; flex-wrap: wrap; }
+      header strong { font-size: 20px; color: #1f2a5c; }
+      nav a { margin-right: 16px; color: #333; text-decoration: none; font-size: 15px; }
+      .hero { padding: 72px 24px; background: #2d3a6e; color: #fff; }
+      .hero h1 { margin: 0 0 8px; font-size: 40px; max-width: 16ch; }
+      main { max-width: 720px; padding: 32px 24px; line-height: 1.7; }
+      code { background: #eee; padding: 2px 6px; }
+    </style>
+  </head>
+  <body>
+    <header>
+      <strong>ABC Engineering College</strong>
+      <nav><a href="#">Home</a><a href="#">About</a><a href="#">Admissions</a><a href="#">Academics</a><a href="#">Placements</a><a href="#">Contact</a></nav>
+    </header>
+    <section class="hero">
+      <h1>Empowering future leaders</h1>
+      <p>Quality education, innovation and opportunities in Coimbatore.</p>
+    </section>
+    <main>
+      <p>This stand-in college page shows the embedded help desk. The only thing added to the page is the
+        one <code>&lt;script&gt;</code> tag at the bottom.</p>
+    </main>
+
+    <!-- ===== College Help Desk widget: paste this before </body> on the real website ===== -->
+    <script src="/widget/helpdesk-widget.js" data-api="/api" data-title="ABC College Help Desk" defer></script>
+  </body>
+</html>
