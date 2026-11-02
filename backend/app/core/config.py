@@ -1,13 +1,16 @@
 """Application settings, loaded from environment variables / .env file."""
 from functools import lru_cache
 from pathlib import Path
+from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
 from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
+    # `neon deploy` writes DATABASE_URL and the object-storage keys to ../.env.local (repo root).
+    # Later files override earlier ones, and real environment variables override both.
+    model_config = SettingsConfigDict(env_file=(".env", "../.env.local"), env_file_encoding="utf-8", extra="ignore")
 
     # --- App ---
     APP_NAME: str = "College AI Help Desk"
@@ -24,6 +27,13 @@ class Settings(BaseSettings):
 
     # --- Database ---
     DATABASE_URL: str = "postgresql+asyncpg://helpdesk:helpdesk@localhost:5432/helpdesk"
+
+    # --- Object storage (Neon / any S3-compatible). Empty S3_BUCKET = keep uploads on local disk. ---
+    S3_BUCKET: str = ""
+    AWS_ACCESS_KEY_ID: str = ""
+    AWS_SECRET_ACCESS_KEY: str = ""
+    AWS_ENDPOINT_URL_S3: str = ""
+    AWS_REGION: str = "auto"
 
     # --- Redis ---
     REDIS_URL: str = "redis://localhost:6379/0"
@@ -79,13 +89,32 @@ class Settings(BaseSettings):
             return [o.strip() for o in v.split(",") if o.strip()]
         return v
 
+    @field_validator("DATABASE_URL")
+    @classmethod
+    def asyncpg_url(cls, v: str) -> str:
+        """Accept a plain libpq-style URL (as Neon provides) and make it asyncpg-ready:
+        postgresql:// → postgresql+asyncpg://, sslmode=… → ssl=…, and drop channel_binding."""
+        parts = urlsplit(v)
+        if parts.scheme in ("postgres", "postgresql"):
+            parts = parts._replace(scheme="postgresql+asyncpg")
+        query = []
+        for key, val in parse_qsl(parts.query, keep_blank_values=True):
+            if key == "channel_binding":
+                continue
+            query.append(("ssl" if key == "sslmode" else key, val))
+        return urlunsplit(parts._replace(query=urlencode(query)))
+
     @property
     def is_mock_llm(self) -> bool:
         return self.LLM_PROVIDER == "mock" or not self.OPENAI_API_KEY
 
     @property
     def sync_database_url(self) -> str:
-        return self.DATABASE_URL.replace("+asyncpg", "+psycopg")
+        return self.DATABASE_URL.replace("+asyncpg", "+psycopg").replace("ssl=", "sslmode=")
+
+    @property
+    def use_s3(self) -> bool:
+        return bool(self.S3_BUCKET and self.AWS_ENDPOINT_URL_S3)
 
 
 @lru_cache

@@ -18,6 +18,7 @@ from app.core.config import settings
 from app.core.database import SessionLocal
 from app.core.redis import cache_clear_prefix
 from app.models import Chunk, Document
+from app.services import storage
 from app.services.llm_client import get_llm
 
 log = logging.getLogger(__name__)
@@ -258,7 +259,8 @@ async def ingest_document(document_id: int) -> None:
 
         try:
             if doc.file_path:
-                pages = extract_file(Path(doc.file_path))
+                async with storage.local_copy(doc.file_path) as local:
+                    pages = extract_file(local)
             elif doc.source_url:
                 mime, pages = await fetch_url(doc.source_url)
                 doc.mime_type = mime

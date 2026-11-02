@@ -6,7 +6,6 @@ Usage:
 """
 import argparse
 import asyncio
-import shutil
 from pathlib import Path
 
 from sqlalchemy import select
@@ -16,6 +15,7 @@ from app.core.constants import DEFAULT_DEPARTMENTS
 from app.core.database import SessionLocal
 from app.core.security import hash_password
 from app.models import FAQ, Department, Document, User
+from app.services import storage
 from app.services.ingestion import embed_faq, ingest_document
 
 SAMPLE_DIR = Path(__file__).resolve().parents[2] / "sample_data"
@@ -92,10 +92,9 @@ async def seed(with_samples: bool) -> None:
         for filename, title, doc_type, slug in SAMPLE_DOCS:
             if await db.scalar(select(Document).where(Document.title == title)):
                 continue
-            dest = settings.UPLOAD_DIR / f"sample_{filename}"
-            shutil.copy(SAMPLE_DIR / filename, dest)
+            stored = await storage.save(f"sample_{filename}", (SAMPLE_DIR / filename).read_bytes(), "text/markdown")
             year = settings.CURRENT_ACADEMIC_YEAR if "2026_27" in filename else None
-            doc = Document(title=title, filename=filename, file_path=str(dest), mime_type="text/markdown",
+            doc = Document(title=title, filename=filename, file_path=stored, mime_type="text/markdown",
                            doc_type=doc_type, department_id=depts[slug].id, academic_year=year, status="pending")
             db.add(doc)
             await db.flush()

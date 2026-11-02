@@ -9,3 +9,6 @@ backups/
 .pytest_cache/
 site/
 *.rdb
+.neon
+.env.local
+.env.render

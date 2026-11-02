@@ -15,6 +15,7 @@ os.environ["OPENAI_API_KEY"] = ""
 os.environ["INLINE_JOBS"] = "true"
 os.environ["RATE_LIMIT_PER_MINUTE"] = "1000"
 os.environ["UPLOAD_DIR"] = "./storage/test_uploads"
+os.environ["S3_BUCKET"] = ""  # tests never touch object storage
 os.environ["FIRST_ADMIN_EMAIL"] = "admin@test.edu"
 os.environ["FIRST_ADMIN_PASSWORD"] = "Admin@12345"
 os.environ.setdefault("REDIS_URL", "redis://localhost:6379/15")

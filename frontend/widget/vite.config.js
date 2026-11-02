@@ -10,7 +10,7 @@ export default defineConfig({
   define: { 'process.env.NODE_ENV': JSON.stringify('production') },
   server: {
     port: 5173,
-    proxy: { '/api': 'http://localhost:8000' },
+    proxy: { '/api': process.env.API_TARGET || 'http://localhost:8000' },
   },
   build: {
     lib: {

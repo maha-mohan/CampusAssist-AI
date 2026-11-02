@@ -16,6 +16,7 @@ from app.core.redis import cache_clear_prefix
 from app.models import FAQ, Chunk, Document, User
 from app.schemas.schemas import ChunkOut, DocumentOut, DocumentUpdate, FAQIn, FAQOut, Page, UrlIngestIn
 from app.services.ingestion import ALLOWED_EXTENSIONS
+from app.services import storage
 from app.services.jobs import enqueue
 
 router = APIRouter(tags=["admin-knowledge"])
@@ -83,14 +84,12 @@ async def upload_document(
     if ext in MAGIC and not data.startswith(MAGIC[ext]):
         raise HTTPException(400, "File content doesn't match its extension")
 
-    settings.UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
     safe = re.sub(r"[^\w.\-]", "_", file.filename or f"file{ext}")[:120]
-    dest = settings.UPLOAD_DIR / f"{uuid.uuid4().hex[:12]}_{safe}"
-    dest.write_bytes(data)
+    stored = await storage.save(f"{uuid.uuid4().hex[:12]}_{safe}", data, MIME.get(ext))
 
     doc = Document(
         title=title.strip() or Path(file.filename).stem.replace("_", " "), filename=file.filename,
-        file_path=str(dest), mime_type=MIME.get(ext), doc_type=doc_type if doc_type in DOC_TYPES else "general",
+        file_path=stored, mime_type=MIME.get(ext), doc_type=doc_type if doc_type in DOC_TYPES else "general",
         department_id=department_id, academic_year=academic_year or None, valid_from=valid_from, valid_to=valid_to,
         status="pending", uploaded_by=user.id,
     )
@@ -172,7 +171,7 @@ async def delete_document(doc_id: int, user: User = Depends(require_content_admi
         raise HTTPException(404, "Document not found")
     _scope_check(user, doc.department_id)
     if doc.file_path:
-        Path(doc.file_path).unlink(missing_ok=True)
+        await storage.delete(doc.file_path)
     await db.delete(doc)
     await audit(db, user, "delete", "document", doc_id, {"title": doc.title})
     await db.commit()
