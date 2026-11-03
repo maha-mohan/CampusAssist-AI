@@ -14,11 +14,11 @@ OUT="$ROOT/site"
 rm -rf "$OUT" && mkdir -p "$OUT/widget" "$OUT/demo"
 
 echo "Building widget..."
-(cd "$ROOT/frontend/widget" && npm install --no-audit --no-fund && npm run build)
+(cd "$ROOT/frontend/widget" && npm install --include=dev --no-audit --no-fund && npm run build)
 cp "$ROOT/frontend/widget/dist/helpdesk-widget.js" "$OUT/widget/"
 
 echo "Building admin dashboard..."
-(cd "$ROOT/frontend/admin" && npm install --no-audit --no-fund && VITE_API_URL="$API_URL" npm run build)
+(cd "$ROOT/frontend/admin" && npm install --include=dev --no-audit --no-fund && VITE_API_URL="$API_URL" npm run build)
 cp -r "$ROOT/frontend/admin/dist" "$OUT/admin"
 
 # Demo page: point the embed at the hosted API.
