@@ -1,10 +1,12 @@
 """Application settings, loaded from environment variables / .env file."""
+import json
 from functools import lru_cache
 from pathlib import Path
+from typing import Annotated
 from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
 from pydantic import Field, field_validator
-from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
 
 
 class Settings(BaseSettings):
@@ -18,7 +20,7 @@ class Settings(BaseSettings):
     ENVIRONMENT: str = "development"  # development | production
     DEBUG: bool = False
     API_PREFIX: str = "/api"
-    CORS_ORIGINS: list[str] = Field(default_factory=lambda: ["http://localhost:5173", "http://localhost:5174", "http://localhost:8080"])
+    CORS_ORIGINS: Annotated[list[str], NoDecode] = Field(default_factory=lambda: ["http://localhost:5173", "http://localhost:5174", "http://localhost:8080"])
 
     # --- Security ---
     SECRET_KEY: str = "change-me-in-production-use-a-long-random-string"
@@ -85,8 +87,11 @@ class Settings(BaseSettings):
     @field_validator("CORS_ORIGINS", mode="before")
     @classmethod
     def split_origins(cls, v):
-        if isinstance(v, str) and not v.startswith("["):
-            return [o.strip() for o in v.split(",") if o.strip()]
+        if isinstance(v, str):
+            v = v.strip()
+            if v.startswith("["):
+                return json.loads(v)
+            return [o.strip().rstrip("/") for o in v.split(",") if o.strip()]
         return v
 
     @field_validator("DATABASE_URL")
