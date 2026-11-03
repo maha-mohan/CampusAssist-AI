@@ -1,0 +1,6 @@
+{
+  "installCommand": "echo skip",
+  "buildCommand": "bash infra/scripts/build_static_site.sh \"$API_URL\"",
+  "outputDirectory": "site",
+  "rewrites": [{ "source": "/admin/:path*", "destination": "/admin/index.html" }]
+}
